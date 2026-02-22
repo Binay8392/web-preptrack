@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getSession } from "@/lib/auth/server";
-import { getGeminiClient } from "@/lib/ai/gemini";
+import { getGeminiClient, getGeminiModelName } from "@/lib/ai/gemini";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -99,7 +99,7 @@ export async function POST(request: Request) {
     return NextResponse.json(fallbackResponse);
   }
 
-  const model = gemini.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = gemini.getGenerativeModel({ model: getGeminiModelName() });
   const prompt = `
 Generate ${parsed.data.count} multiple-choice questions for the ${parsed.data.exam} exam.
 Focus subjects: ${subjects.join(", ")}.

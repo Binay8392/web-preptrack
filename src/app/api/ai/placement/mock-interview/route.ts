@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getGeminiClient } from "@/lib/ai/gemini";
+import { getGeminiClient, getGeminiModelName } from "@/lib/ai/gemini";
 import { getSession } from "@/lib/auth/server";
 
 export const runtime = "nodejs";
@@ -72,7 +72,7 @@ Return ONLY valid JSON:
 `;
 
   try {
-    const model = gemini.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = gemini.getGenerativeModel({ model: getGeminiModelName() });
     const result = await model.generateContent(prompt);
     const text = extractJson(result.response.text().trim());
     const response = JSON.parse(text) as { score: number; feedbackSummary: string };

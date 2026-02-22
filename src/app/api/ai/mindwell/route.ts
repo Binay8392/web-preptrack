@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getSession } from "@/lib/auth/server";
-import { getGeminiClient } from "@/lib/ai/gemini";
+import { getGeminiClient, getGeminiModelName } from "@/lib/ai/gemini";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -39,7 +39,7 @@ Include one immediate action and one reflection prompt.
 `;
 
   try {
-    const model = gemini.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = gemini.getGenerativeModel({ model: getGeminiModelName() });
     const result = await model.generateContent(prompt);
     const text = result.response.text().trim();
 

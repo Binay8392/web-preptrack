@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getSession } from "@/lib/auth/server";
-import { getGeminiClient } from "@/lib/ai/gemini";
+import { getGeminiClient, getGeminiModelName } from "@/lib/ai/gemini";
 import { adminDb } from "@/lib/firebase/admin";
 import { getUser } from "@/lib/firestore/service";
 
@@ -108,7 +108,7 @@ Guidelines:
   };
 
   try {
-    const model = gemini.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = gemini.getGenerativeModel({ model: getGeminiModelName() });
     const result = await model.generateContent(prompt);
     const text = extractJson(result.response.text().trim());
     responsePayload = JSON.parse(text);

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getGeminiClient } from "@/lib/ai/gemini";
+import { getGeminiClient, getGeminiModelName } from "@/lib/ai/gemini";
 import { getSession } from "@/lib/auth/server";
 import { adminDb } from "@/lib/firebase/admin";
 import { getUser } from "@/lib/firestore/service";
@@ -89,7 +89,7 @@ Keep each value concise and practical.
 
   let responsePayload = fallback(parsed.data.weakDsaTopics);
   try {
-    const model = gemini.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = gemini.getGenerativeModel({ model: getGeminiModelName() });
     const result = await model.generateContent(prompt);
     const text = extractJson(result.response.text().trim());
     responsePayload = {
