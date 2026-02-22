@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Chrome } from "lucide-react";
 import { signInWithPopup } from "firebase/auth";
 
-import { clientAuth, googleProvider } from "@/lib/firebase/client";
+import { clientAuth, firebaseClientError, googleProvider } from "@/lib/firebase/client";
 
 export function GoogleSignInButton() {
   const router = useRouter();
@@ -17,6 +17,13 @@ export function GoogleSignInButton() {
     setError(null);
 
     try {
+      if (!clientAuth || !googleProvider) {
+        throw new Error(
+          firebaseClientError ??
+            "Firebase is not configured. Add NEXT_PUBLIC_FIREBASE_* variables in Vercel.",
+        );
+      }
+
       const credential = await signInWithPopup(clientAuth, googleProvider);
       const idToken = await credential.user.getIdToken();
 
@@ -47,7 +54,7 @@ export function GoogleSignInButton() {
       <button
         type="button"
         onClick={handleSignIn}
-        disabled={loading}
+        disabled={loading || !clientAuth || !googleProvider}
         className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-400/30 bg-slate-900/40 px-4 py-3 text-sm font-semibold text-slate-50 transition hover:border-cyan-300/50 hover:bg-slate-900/70 disabled:cursor-not-allowed disabled:opacity-70"
       >
         <Chrome className="size-4" />
