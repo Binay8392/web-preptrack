@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Chrome } from "lucide-react";
 import type { AuthError } from "firebase/auth";
-import { signInWithPopup } from "firebase/auth";
+import { getRedirectResult, signInWithPopup, signInWithRedirect } from "firebase/auth";
 
 import { clientAuth, firebaseClientError, googleProvider } from "@/lib/firebase/client";
 
@@ -48,6 +48,53 @@ export function GoogleSignInButton() {
         "Firebase is not configured. Add NEXT_PUBLIC_FIREBASE_* variables in Vercel."
       : null;
 
+  const createServerSession = async (idToken: string) => {
+    const response = await fetch("/api/auth/session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ idToken }),
+    });
+
+    if (!response.ok) {
+      const body = (await response.json()) as { error?: string };
+      throw new Error(body.error ?? "Unable to create secure session.");
+    }
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const handleRedirectResult = async () => {
+      if (!clientAuth) return;
+
+      try {
+        const result = await getRedirectResult(clientAuth);
+        if (!result?.user || !isMounted) return;
+
+        setLoading(true);
+        const idToken = await result.user.getIdToken();
+        await createServerSession(idToken);
+        router.replace("/");
+        router.refresh();
+      } catch (err) {
+        if (!isMounted) return;
+        // eslint-disable-next-line no-console
+        console.error("Google redirect sign-in error:", err);
+        setError(getAuthErrorMessage(err));
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    handleRedirectResult();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [router]);
+
   const handleSignIn = async () => {
     setLoading(true);
     setError(null);
@@ -61,23 +108,24 @@ export function GoogleSignInButton() {
 
       const credential = await signInWithPopup(clientAuth, googleProvider);
       const idToken = await credential.user.getIdToken();
-
-      const response = await fetch("/api/auth/session", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ idToken }),
-      });
-
-      if (!response.ok) {
-        const body = (await response.json()) as { error?: string };
-        throw new Error(body.error ?? "Unable to create secure session.");
-      }
+      await createServerSession(idToken);
 
       router.replace("/");
       router.refresh();
     } catch (err) {
+      // Popup may be blocked on some browsers/devices; fallback to redirect flow.
+      if (
+        clientAuth &&
+        googleProvider &&
+        err &&
+        typeof err === "object" &&
+        "code" in err &&
+        (err as { code?: string }).code === "auth/popup-blocked"
+      ) {
+        await signInWithRedirect(clientAuth, googleProvider);
+        return;
+      }
+
       // eslint-disable-next-line no-console
       console.error("Google sign-in error:", err);
       setError(getAuthErrorMessage(err));
