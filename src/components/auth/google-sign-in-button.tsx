@@ -3,9 +3,40 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Chrome } from "lucide-react";
+import type { AuthError } from "firebase/auth";
 import { signInWithPopup } from "firebase/auth";
 
 import { clientAuth, firebaseClientError, googleProvider } from "@/lib/firebase/client";
+
+function getAuthErrorMessage(error: unknown) {
+  if (!(error && typeof error === "object" && "code" in error)) {
+    return error instanceof Error ? error.message : "Google sign-in failed.";
+  }
+
+  const authError = error as AuthError;
+
+  if (authError.code === "auth/unauthorized-domain") {
+    return "This domain is not authorized in Firebase Auth. Add your current domain in Firebase Console -> Authentication -> Authorized domains.";
+  }
+
+  if (authError.code === "auth/operation-not-allowed") {
+    return "Google sign-in is disabled in Firebase. Enable Google provider in Firebase Console -> Authentication -> Sign-in method.";
+  }
+
+  if (authError.code === "auth/popup-blocked") {
+    return "Sign-in popup was blocked by your browser. Allow popups for this site and try again.";
+  }
+
+  if (authError.code === "auth/popup-closed-by-user") {
+    return "Sign-in popup was closed before completion. Please try again and finish the Google flow.";
+  }
+
+  if (authError.code === "auth/invalid-api-key") {
+    return "Invalid Firebase Web API key. Check NEXT_PUBLIC_FIREBASE_API_KEY in your environment settings.";
+  }
+
+  return authError.message || "Google sign-in failed.";
+}
 
 export function GoogleSignInButton() {
   const router = useRouter();
@@ -43,7 +74,9 @@ export function GoogleSignInButton() {
       router.replace("/");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Google sign-in failed.");
+      // eslint-disable-next-line no-console
+      console.error("Google sign-in error:", err);
+      setError(getAuthErrorMessage(err));
     } finally {
       setLoading(false);
     }

@@ -14,6 +14,22 @@ const bodySchema = z.object({
 const SESSION_COOKIE_NAME = "__session";
 const EXPIRES_IN_MS = 1000 * 60 * 60 * 24 * 7;
 
+function mapSessionError(error: unknown) {
+  if (!(error instanceof Error)) return "Failed to create session.";
+
+  const message = error.message || "";
+
+  if (message.includes("Firebase Admin credentials are missing")) {
+    return "Server auth is not configured. Set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY in deployment env vars.";
+  }
+
+  if (message.includes("ID token")) {
+    return "Invalid Firebase ID token. Ensure client and server Firebase projects are the same.";
+  }
+
+  return message || "Failed to create session.";
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -47,9 +63,6 @@ export async function POST(request: Request) {
 
     return response;
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to create session." },
-      { status: 401 },
-    );
+    return NextResponse.json({ error: mapSessionError(error) }, { status: 401 });
   }
 }
