@@ -42,6 +42,11 @@ export function GoogleSignInButton() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const configError =
+    !clientAuth || !googleProvider
+      ? firebaseClientError ??
+        "Firebase is not configured. Add NEXT_PUBLIC_FIREBASE_* variables in Vercel."
+      : null;
 
   const handleSignIn = async () => {
     setLoading(true);
@@ -50,8 +55,7 @@ export function GoogleSignInButton() {
     try {
       if (!clientAuth || !googleProvider) {
         throw new Error(
-          firebaseClientError ??
-            "Firebase is not configured. Add NEXT_PUBLIC_FIREBASE_* variables in Vercel.",
+          configError ?? "Firebase is not configured.",
         );
       }
 
@@ -87,12 +91,13 @@ export function GoogleSignInButton() {
       <button
         type="button"
         onClick={handleSignIn}
-        disabled={loading || !clientAuth || !googleProvider}
+        disabled={loading}
         className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-400/30 bg-slate-900/40 px-4 py-3 text-sm font-semibold text-slate-50 transition hover:border-cyan-300/50 hover:bg-slate-900/70 disabled:cursor-not-allowed disabled:opacity-70"
       >
         <Chrome className="size-4" />
         {loading ? "Signing in..." : "Continue with Google"}
       </button>
+      {configError ? <p className="text-xs text-amber-300">{configError}</p> : null}
       {error ? <p className="text-xs text-rose-300">{error}</p> : null}
     </div>
   );
