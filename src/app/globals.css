@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ink: #050c1f;
+  --ink-soft: #0b1533;
+  --glass-bg: rgba(18, 30, 64, 0.58);
+  --glass-border: rgba(157, 187, 255, 0.22);
+  --accent: #53c1ff;
+  --accent-2: #4ee7a8;
+  --text: #edf3ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-body), sans-serif;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(90, 142, 255, 0.25), transparent 36%),
+    radial-gradient(circle at 80% 0%, rgba(78, 231, 168, 0.14), transparent 32%),
+    linear-gradient(145deg, #020614, #07112b 45%, #071735 100%);
+  background-attachment: fixed;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading), sans-serif;
+}
+
+.glass-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 15px 35px rgba(3, 9, 24, 0.45);
+}
+
+.page-shell {
+  position: relative;
+}
+
+.page-shell::before {
+  content: "";
+  position: fixed;
+  inset: -10%;
+  pointer-events: none;
+  opacity: 0.33;
+  background-image:
+    linear-gradient(rgba(116, 146, 211, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(116, 146, 211, 0.12) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(circle at 50% 40%, black 42%, transparent 88%);
+}
+
+.placement-shell::before {
+  opacity: 0.4;
+  background-image:
+    linear-gradient(rgba(72, 122, 232, 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(72, 122, 232, 0.16) 1px, transparent 1px);
+}
+
+.placement-shell .glass-card {
+  background: rgba(7, 25, 58, 0.62);
+  border-color: rgba(95, 176, 255, 0.28);
+}
+
+@keyframes floatUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-float-up {
+  animation: floatUp 0.6s ease forwards;
+}
