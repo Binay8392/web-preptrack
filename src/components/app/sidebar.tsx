@@ -18,7 +18,6 @@ import {
   Timer,
 } from "lucide-react";
 
-import { SignOutButton } from "@/components/auth/sign-out-button";
 import { cn } from "@/lib/utils";
 
 const examNav = [
@@ -108,9 +107,6 @@ export function Sidebar({ name, photoURL, xp, goalType }: SidebarProps) {
               {xp} XP
             </p>
           </div>
-        </div>
-        <div className="mt-3">
-          <SignOutButton />
         </div>
       </div>
     </aside>

@@ -14,7 +14,7 @@ export default async function OsLayout({
   const session = await requireAuth();
   const user = await getUser(session.uid);
 
-  if (!user) redirect("/login");
+  if (!user) redirect("/onboarding");
   const onboardingMissing = !user.onboardingCompleted || !user.targetDate || !user.dailyStudyTime;
   const examMissing = user.goalType !== "placement" && !user.examId;
   const placementRoleMissing = user.goalType === "placement" && !user.targetRole;
