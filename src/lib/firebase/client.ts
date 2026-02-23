@@ -50,3 +50,9 @@ export { firebaseClientError };
 export const clientAuth = app ? getAuth(app) : null;
 export const clientDb = app ? getFirestore(app) : null;
 export const googleProvider = app ? new GoogleAuthProvider() : null;
+
+if (googleProvider) {
+  googleProvider.setCustomParameters({
+    prompt: "select_account",
+  });
+}

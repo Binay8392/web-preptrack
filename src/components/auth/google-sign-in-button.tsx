@@ -8,6 +8,11 @@ import { getRedirectResult, signInWithPopup, signInWithRedirect } from "firebase
 
 import { clientAuth, firebaseClientError, googleProvider } from "@/lib/firebase/client";
 
+function getAuthErrorCode(error: unknown) {
+  if (!error || typeof error !== "object" || !("code" in error)) return null;
+  return String((error as { code?: string }).code ?? "");
+}
+
 function getAuthErrorMessage(error: unknown) {
   if (!(error && typeof error === "object" && "code" in error)) {
     return error instanceof Error ? error.message : "Google sign-in failed.";
@@ -36,6 +41,15 @@ function getAuthErrorMessage(error: unknown) {
   }
 
   return authError.message || "Google sign-in failed.";
+}
+
+function shouldPreferRedirectFlow() {
+  if (typeof window === "undefined") return false;
+  const ua = window.navigator.userAgent;
+  const isIos = /iPad|iPhone|iPod/i.test(ua);
+  const isInAppBrowser = /FBAN|FBAV|Instagram|Line|wv/i.test(ua);
+  const isSafari = /Safari/i.test(ua) && !/Chrome|CriOS|Edg|OPR|Android/i.test(ua);
+  return isIos || isInAppBrowser || isSafari;
 }
 
 export function GoogleSignInButton() {
@@ -106,6 +120,11 @@ export function GoogleSignInButton() {
         );
       }
 
+      if (shouldPreferRedirectFlow()) {
+        await signInWithRedirect(clientAuth, googleProvider);
+        return;
+      }
+
       const credential = await signInWithPopup(clientAuth, googleProvider);
       const idToken = await credential.user.getIdToken();
       await createServerSession(idToken);
@@ -113,14 +132,15 @@ export function GoogleSignInButton() {
       router.replace("/");
       router.refresh();
     } catch (err) {
+      const authCode = getAuthErrorCode(err);
+
       // Popup may be blocked on some browsers/devices; fallback to redirect flow.
       if (
         clientAuth &&
         googleProvider &&
-        err &&
-        typeof err === "object" &&
-        "code" in err &&
-        (err as { code?: string }).code === "auth/popup-blocked"
+        (authCode === "auth/popup-blocked" ||
+          authCode === "auth/popup-closed-by-user" ||
+          authCode === "auth/cancelled-popup-request")
       ) {
         await signInWithRedirect(clientAuth, googleProvider);
         return;

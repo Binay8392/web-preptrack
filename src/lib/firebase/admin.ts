@@ -10,13 +10,18 @@ function getPrivateKey() {
   const key = process.env.FIREBASE_PRIVATE_KEY;
   if (!key) return undefined;
 
-  // Accept both quoted .env style keys and raw values from hosting providers.
+  // Accept quoted/unquoted env values and both escaped newline variants (\n, \\n).
   const unquoted =
-    key.length >= 2 && key.startsWith("\"") && key.endsWith("\"")
+    key.length >= 2 &&
+    ((key.startsWith("\"") && key.endsWith("\"")) || (key.startsWith("'") && key.endsWith("'")))
       ? key.slice(1, -1)
       : key;
 
-  return unquoted.replace(/\\n/g, "\n");
+  return unquoted
+    .replace(/\\\\n/g, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\\\r?\n/g, "\n")
+    .trim();
 }
 
 function initAdminApp() {
