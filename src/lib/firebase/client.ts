@@ -13,6 +13,17 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+const requiredConfigMap = {
+  NEXT_PUBLIC_FIREBASE_API_KEY: firebaseConfig.apiKey,
+  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: firebaseConfig.authDomain,
+  NEXT_PUBLIC_FIREBASE_PROJECT_ID: firebaseConfig.projectId,
+  NEXT_PUBLIC_FIREBASE_APP_ID: firebaseConfig.appId,
+} as const;
+
+const missingRequiredKeys = Object.entries(requiredConfigMap)
+  .filter(([, value]) => !value)
+  .map(([key]) => key);
+
 const hasRequiredConfig = Boolean(
   firebaseConfig.apiKey &&
     firebaseConfig.authDomain &&
@@ -23,7 +34,7 @@ const hasRequiredConfig = Boolean(
 if (!hasRequiredConfig) {
   // eslint-disable-next-line no-console
   console.warn(
-    "Firebase client configuration is missing. Add NEXT_PUBLIC_FIREBASE_* values.",
+    `Firebase client configuration is missing. Missing: ${missingRequiredKeys.join(", ") || "unknown key"}.`,
   );
 }
 
@@ -42,7 +53,22 @@ if (hasRequiredConfig) {
   }
 } else {
   firebaseClientError =
-    "Firebase client is not configured. Set NEXT_PUBLIC_FIREBASE_* environment variables.";
+    `Firebase client is not configured. Missing: ${missingRequiredKeys.join(", ") || "unknown key"}.`;
+}
+
+if (process.env.NEXT_PUBLIC_FIREBASE_DEBUG === "true") {
+  // Safe to log existence booleans only; never log secrets.
+  // eslint-disable-next-line no-console
+  console.table({
+    NEXT_PUBLIC_FIREBASE_API_KEY: Boolean(firebaseConfig.apiKey),
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: Boolean(firebaseConfig.authDomain),
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID: Boolean(firebaseConfig.projectId),
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: Boolean(firebaseConfig.storageBucket),
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: Boolean(firebaseConfig.messagingSenderId),
+    NEXT_PUBLIC_FIREBASE_APP_ID: Boolean(firebaseConfig.appId),
+    NEXT_PUBLIC_FIREBASE_DEBUG: process.env.NEXT_PUBLIC_FIREBASE_DEBUG,
+    host: typeof window !== "undefined" ? window.location.host : "server",
+  });
 }
 
 export { firebaseClientError };
